@@ -31,7 +31,9 @@ namespace Sync.Frontend.Services
 
             try
             {
-                var uri = new Uri($"ws://localhost:5001/ws/{editorId}/{userId}");
+                var backendUrl = Environment.GetEnvironmentVariable("BACKEND_URL") ?? "http://localhost:5001";
+                var wsUrl = backendUrl.Replace("http", "ws");
+                var uri = new Uri($"{wsUrl}/ws/{editorId}/{userId}");
                 await _webSocket.ConnectAsync(uri, _cancellationTokenSource.Token);
                 _isConnected = true;
                 OnConnectionStatusChanged?.Invoke("Connected");

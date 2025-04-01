@@ -20,7 +20,8 @@ namespace Sync.Frontend.Services
         public EditorService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _httpClient.BaseAddress = new Uri("http://localhost:5001");
+            var backendUrl = Environment.GetEnvironmentVariable("BACKEND_URL") ?? "http://localhost:5001";
+            _httpClient.BaseAddress = new Uri(backendUrl);
         }
 
         public async Task<EditorState?> GetEditorAsync(string id)
@@ -56,10 +57,7 @@ namespace Sync.Frontend.Services
         {
             try
             {
-                var json = JsonSerializer.Serialize(content);
-                var data = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await _httpClient.PutAsync($"api/editor/{id}", data);
-                
+                var response = await _httpClient.PutAsync($"api/editor/{id}", new StringContent(content));
                 if (response.IsSuccessStatusCode)
                 {
                     return await response.Content.ReadFromJsonAsync<EditorState>(_jsonOptions);
