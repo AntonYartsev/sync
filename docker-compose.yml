@@ -1,42 +1,15 @@
 version: '3.8'
 
 services:
-  backend:
+  sync:
+    image: sync:latest
     build:
-      context: ./Sync.Backend
-      dockerfile: Dockerfile
-      platforms:
-        - linux/arm64
-    container_name: sync-backend
-    networks:
-      - sync-network
+      context: .
+      dockerfile: Sync.Mono/Dockerfile
+    container_name: sync
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80
-      - CORS_ORIGINS=http://localhost:5025
     ports:
-      - "5001:80"
-
-  frontend:
-    build:
-      context: ./Sync.Frontend
-      dockerfile: Dockerfile
-      platforms:
-        - linux/arm64
-    container_name: sync-frontend
-    networks:
-      - sync-network
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:80
-      - BACKEND_URL=http://backend
-    ports:
-      - "5025:80"
-    restart: unless-stopped
-    depends_on:
-      - backend
-
-networks:
-  sync-network:
-    name: sync-network
-    driver: bridge 
+      - "5000:80"
+    restart: unless-stopped 
