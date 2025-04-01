@@ -6,7 +6,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80
-      - CORS_ORIGINS=http://138.124.18.174:5025,http://localhost:5025
+      - CORS_ORIGINS=https://sync.antonyartsev.com
     ports:
       - "5001:80"
     restart: unless-stopped
@@ -16,7 +16,7 @@ services:
   frontend:
     image: ghcr.io/antonyartsev/sync/frontend:latest
     environment:
-      - BACKEND_URL=http://138.124.18.174:5001
+      - BACKEND_URL=https://sync.antonyartsev.com
     ports:
       - "5025:80"
     depends_on:
