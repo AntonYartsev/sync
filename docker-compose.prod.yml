@@ -2,11 +2,11 @@ version: '3.8'
 
 services:
   backend:
-    image: ghcr.io/${GITHUB_REPOSITORY}/backend:latest
+    image: ghcr.io/antonyartsev/sync/backend:latest
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80
-      - CORS_ORIGINS=http://138.124.18.174:80
+      - CORS_ORIGINS=http://138.124.18.174:5025,http://localhost:5025
     ports:
       - "5001:80"
     restart: unless-stopped
@@ -14,11 +14,11 @@ services:
       - sync-network
 
   frontend:
-    image: ghcr.io/${GITHUB_REPOSITORY}/frontend:latest
+    image: ghcr.io/antonyartsev/sync/frontend:latest
     environment:
-      - BACKEND_URL=http://backend:80
+      - BACKEND_URL=http://138.124.18.174:5001
     ports:
-      - "80:80"
+      - "5025:80"
     depends_on:
       - backend
     restart: unless-stopped
@@ -27,4 +27,4 @@ services:
 
 networks:
   sync-network:
-    driver: bridge 
+    driver: bridge
