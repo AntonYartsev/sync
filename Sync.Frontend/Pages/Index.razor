@@ -1,0 +1,681 @@
+@page "/"
+@using Sync.Frontend.Services
+@using Sync.Frontend.Models
+@using BlazorMonaco
+@using BlazorMonaco.Editor
+@inject IEditorService EditorService
+@inject WebSocketService WebSocketService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<PageTitle>Sync</PageTitle>
+
+<div class="main-container">
+    @if (_isLoading)
+    {
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+    }
+    else if (_editorState == null)
+    {
+        <div class="welcome-container">
+            <div class="welcome-card">
+                <div class="welcome-body">
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="editorId" @bind="_editorIdInput" placeholder="Enter session ID or leave empty" />
+                    </div>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="userId" @bind="_userIdInput" placeholder="Enter your name" />
+                    </div>
+                    <div class="language-dropdown">
+                        <select id="language" class="form-control" @bind="_selectedLanguage">
+                        <option value="csharp">C#</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="typescript">TypeScript</option>
+                            <option value="html">HTML</option>
+                            <option value="css">CSS</option>
+                            <option value="java">Java</option>
+                            <option value="python">Python</option>
+                            <option value="json">JSON</option>
+                            <option value="plaintext">Plain Text</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" @onclick="JoinOrCreateSession">Join Session</button>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="editor-container">
+            <div class="editor-wrapper">
+                <div class="editor-header">
+                    <div class="header-left">
+                        <div class="session-info">
+                            <span class="session-id">Session: @_editorState.Id</span>
+                            <div class="connection-info">
+                                <span class="connection-indicator @(_connectionStatus == "Connected" ? "connected" : "disconnected")"></span>
+                                <span>@_connectionStatus</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="header-right">
+                        <div class="language-selector">
+                            <select id="language-select" @bind="_selectedLanguage" @bind:after="OnLanguageChangeAsync" class="dark-select">
+                                <option value="csharp">C#</option>
+                                <option value="javascript">JavaScript</option>
+                                <option value="typescript">TypeScript</option>
+                                <option value="html">HTML</option>
+                                <option value="css">CSS</option>
+                                <option value="java">Java</option>
+                                <option value="python">Python</option>
+                                <option value="json">JSON</option>
+                                <option value="plaintext">Plain Text</option>
+                            </select>
+                        </div>
+                        
+                        <div class="users-info">
+                            <span class="users-count">Users: @_editorState.ConnectedUsers.Count</span>
+                            <div class="users-dropdown">
+                                <div class="dropdown-content">
+                                    @foreach (var user in _editorState.ConnectedUsers)
+                                    {
+                                        <div class="user-item">
+                                            <span class="user-icon">👤</span>
+                                            <span class="user-name">@user</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-dark btn-exit" @onclick="DisconnectAndReset">Exit</button>
+                    </div>
+                </div>
+                <div class="editor-container-split">
+                    <div id="highlight-editor" class="highlighted-editor"></div>
+                    <textarea @bind="_content" @bind:event="oninput" 
+                             @onkeyup="OnContentChanged"
+                             class="code-editor" 
+                             spellcheck="false"
+                             tabindex="0"></textarea>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+:root {
+    --header-height: 50px;
+}
+
+::deep body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
+.main-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+}
+
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border-left-color: #0366d6;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.welcome-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    padding: 0;
+}
+
+.welcome-card {
+    max-width: 500px;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    margin: 20px;
+}
+
+.welcome-header {
+    background-color: #3c4b64;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.welcome-header h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+.subtitle {
+    margin-top: 5px;
+    opacity: 0.8;
+}
+
+.welcome-body {
+    padding: 30px;
+    background-color: white;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.language-dropdown {
+    margin-bottom: 20px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background-color: #3c4b64;
+    color: white;
+    width: 100%;
+}
+
+.btn-primary:hover {
+    background-color: #2e3a50;
+    transform: translateY(-2px);
+}
+
+.editor-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    overflow: hidden;
+}
+
+.editor-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #1e1e1e;
+    overflow: hidden;
+}
+
+.editor-header {
+    height: var(--header-height);
+    padding: 0 16px;
+    background-color: #252526;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.session-info {
+    display: flex;
+    flex-direction: column;
+    margin-right: 20px;
+}
+
+.session-id {
+    font-size: 14px;
+    color: #ccc;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.connection-info {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: #999;
+}
+
+.connection-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.connection-indicator.connected {
+    background-color: #2ecc71;
+}
+
+.connection-indicator.disconnected {
+    background-color: #e74c3c;
+}
+
+.language-selector {
+    display: flex;
+    align-items: center;
+}
+
+.dark-select {
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 14px;
+}
+
+.btn-dark {
+    background-color: #333;
+    color: white;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-dark:hover {
+    background-color: #444;
+}
+
+.btn-exit {
+    background-color: #7d3c3c;
+}
+
+.btn-exit:hover {
+    background-color: #a04545;
+}
+
+.users-info {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.users-count {
+    color: #ccc;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: #333;
+    border: 1px solid #444;
+}
+
+.users-count:hover + .users-dropdown,
+.users-dropdown:hover {
+    display: block;
+}
+
+.users-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 5px;
+    background-color: #252526;
+    border: 1px solid #444;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    min-width: 180px;
+}
+
+.dropdown-content {
+    padding: 5px 0;
+}
+
+.user-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #333;
+}
+
+.user-item:last-child {
+    border-bottom: none;
+}
+
+.user-icon {
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+.user-name {
+    color: #ccc;
+    font-size: 13px;
+}
+
+.editor-container-split {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+}
+
+.highlighted-editor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    pointer-events: none;
+    overflow: auto;
+    background-color: #1e1e1e;
+    padding: 0;
+    margin: 0;
+}
+
+.highlighted-editor pre {
+    margin: 0;
+    padding: 0;
+    background: transparent !important;
+    width: 100%;
+    height: 100%;
+}
+
+.highlighted-editor code {
+    margin: 0;
+    padding: 16px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    tab-size: 4;
+    background: transparent !important;
+    color: white;
+    white-space: pre;
+}
+
+.code-editor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    padding: 16px;
+    border: none;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+    tab-size: 4;
+    color: rgba(255, 255, 255, 0.05);
+    caret-color: white;
+    background-color: transparent;
+    overflow: auto;
+    white-space: pre;
+}
+
+.active-line {
+    background-color: rgba(33, 66, 131, 0.5);
+    position: absolute;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.cursor-info {
+    position: fixed;
+    bottom: 5px;
+    right: 5px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    z-index: 1000;
+}
+
+.cursor-indicator {
+    position: fixed;
+    width: 2px;
+    height: 16px;
+    background-color: #fff;
+    pointer-events: none;
+    z-index: 4;
+    animation: blink 1s infinite;
+    display: none;
+}
+
+@@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+</style>
+
+@code {
+    private EditorState? _editorState;
+    private string _content = string.Empty;
+    private string _editorIdInput = string.Empty;
+    private string _userIdInput = Guid.NewGuid().ToString()[..8];
+    private string _connectionStatus = "Disconnected";
+    private bool _isLoading = false;
+    private bool _isUpdating = false;
+    private DateTime _lastUpdate = DateTime.Now;
+    private Timer? _debounceTimer;
+    private string _selectedLanguage = "csharp";
+    private bool _editorInitialized = false;
+    private string _previousContent = string.Empty;
+    private DateTime _lastHighlightUpdate = DateTime.Now;
+
+    protected override void OnInitialized()
+    {
+        WebSocketService.OnContentUpdated += OnWebSocketContentUpdated;
+        WebSocketService.OnConnectionStatusChanged += OnConnectionStatusChanged;
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _editorInitialized = true;
+            await JSRuntime.InvokeVoidAsync("eval", "document.body.style.margin = '0'; document.body.style.padding = '0'; document.body.style.overflow = 'hidden';");
+        }
+        
+        if (_editorInitialized && _editorState != null)
+        {
+            await UpdateHighlightedEditorAsync();
+            await JSRuntime.InvokeVoidAsync("setupScrollSync");
+        }
+    }
+
+    private async Task JoinOrCreateSession()
+    {
+        if (string.IsNullOrWhiteSpace(_userIdInput))
+        {
+            _userIdInput = Guid.NewGuid().ToString()[..8];
+        }
+
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_editorIdInput))
+            {
+                _editorState = await EditorService.CreateEditorAsync();
+                if (_editorState != null)
+                {
+                    _editorIdInput = _editorState.Id;
+                }
+            }
+            else
+            {
+                _editorState = await EditorService.GetEditorAsync(_editorIdInput);
+            }
+
+            if (_editorState != null)
+            {
+                _content = _editorState.Content;
+                await WebSocketService.ConnectAsync(_editorState.Id, _userIdInput);
+            }
+        }
+        catch (Exception)
+        {
+        }
+        finally
+        {
+            _isLoading = false;
+            _editorInitialized = true;
+            StateHasChanged();
+            await UpdateHighlightedEditorAsync();
+        }
+    }
+
+    private void OnWebSocketContentUpdated(string content)
+    {
+        if (_isUpdating) return;
+
+        _content = content;
+        InvokeAsync(async () =>
+        {
+            StateHasChanged();
+            await UpdateHighlightedEditorAsync();
+        });
+    }
+
+    private void OnConnectionStatusChanged(string status)
+    {
+        _connectionStatus = status;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UpdateHighlightedEditorAsync()
+    {
+        if (_editorState == null || !_editorInitialized) return;
+        await JSRuntime.InvokeVoidAsync("updateHighlightedEditor", "highlight-editor", _content, _selectedLanguage);
+    }
+
+    private void OnContentChanged()
+    {
+        if (_content == _previousContent)
+        {
+            return;
+        }
+        
+        TimeSpan timeSinceLastUpdate = DateTime.Now - _lastHighlightUpdate;
+        if (timeSinceLastUpdate.TotalMilliseconds < 300)
+        {
+            _debounceTimer?.Dispose();
+            _debounceTimer = new Timer(async _ =>
+            {
+                await UpdateHighlightedEditorAsync();
+            }, null, 300, Timeout.Infinite);
+            return;
+        }
+        
+        _previousContent = _content;
+        _lastHighlightUpdate = DateTime.Now;
+        
+        InvokeAsync(UpdateHighlightedEditorAsync);
+        
+        _debounceTimer?.Dispose();
+        _debounceTimer = new Timer(async _ =>
+        {
+            if ((DateTime.Now - _lastUpdate).TotalMilliseconds < 500) return;
+            
+            _lastUpdate = DateTime.Now;
+            _isUpdating = true;
+            
+            try
+            {
+                if (WebSocketService.IsConnected)
+                {
+                    await WebSocketService.SendUpdateAsync(_content);
+                }
+            }
+            finally
+            {
+                _isUpdating = false;
+            }
+        }, null, 500, Timeout.Infinite);
+    }
+
+    private async Task OnLanguageChangeAsync()
+    {
+        await UpdateHighlightedEditorAsync();
+    }
+
+    private async Task DisconnectAndReset()
+    {
+        await WebSocketService.DisconnectAsync();
+        _editorState = null;
+        _content = string.Empty;
+        _editorInitialized = false;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        WebSocketService.OnContentUpdated -= OnWebSocketContentUpdated;
+        WebSocketService.OnConnectionStatusChanged -= OnConnectionStatusChanged;
+        _debounceTimer?.Dispose();
+    }
+} 

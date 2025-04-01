@@ -1,0 +1,78 @@
+﻿@inject NavigationManager NavManager
+
+<div class="custom-navbar">
+    <div class="container">
+        <a class="navbar-brand" href="/">Sync Editor</a>
+        <div class="nav-links">
+            <a href="/" class="@GetNavLinkClass("/")">Home</a>
+            <a href="/about" class="@GetNavLinkClass("/about")">About</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .custom-navbar {
+        background-color: #3c4b64;
+        padding: 15px 0;
+    }
+
+    .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+
+    .navbar-brand {
+        color: white;
+        font-size: 1.5rem;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 20px;
+    }
+
+    .nav-link {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        padding: 5px 0;
+        position: relative;
+        transition: color 0.3s;
+    }
+
+    .nav-link:hover {
+        color: white;
+    }
+
+    .nav-link.active {
+        color: white;
+    }
+
+    .nav-link.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: white;
+    }
+</style>
+
+@code {
+    private string GetNavLinkClass(string path)
+    {
+        string currentPath = NavManager.Uri;
+        if (path == "/" && NavManager.Uri.EndsWith(NavManager.BaseUri))
+        {
+            return "nav-link active";
+        }
+        
+        return currentPath.Contains(path) && path != "/" ? "nav-link active" : "nav-link";
+    }
+}

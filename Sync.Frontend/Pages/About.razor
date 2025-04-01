@@ -1,0 +1,104 @@
+@page "/about"
+
+<PageTitle>About - Sync Editor</PageTitle>
+
+<div class="container about-container">
+    <h1>About Sync Editor</h1>
+    
+    <div class="card">
+        <div class="card-body">
+            <h2>What is Sync Editor?</h2>
+            <p>
+                Sync Editor is a collaborative text editing platform that allows multiple users to edit the same document in real-time.
+                Whether you're working on code, documentation, or any text-based content, Sync Editor provides a seamless collaborative experience.
+            </p>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <h2>Features</h2>
+            <ul>
+                <li><strong>Real-time Collaboration:</strong> Changes are instantly synchronized across all connected users.</li>
+                <li><strong>Simple Interface:</strong> Clean and intuitive interface that focuses on content.</li>
+                <li><strong>Session Management:</strong> Create new sessions or join existing ones with a simple ID.</li>
+                <li><strong>User Tracking:</strong> See who is currently connected to your editing session.</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <h2>How to Use</h2>
+            <ol>
+                <li>On the home page, enter a session ID or leave it blank to create a new session.</li>
+                <li>Enter your user ID or leave it as the generated value.</li>
+                <li>Click "Join / Create Session" to start editing.</li>
+                <li>Share the session ID with others who want to collaborate.</li>
+                <li>All changes made by any user will be synchronized in real-time.</li>
+                <li>Click "Leave Session" when you're done.</li>
+            </ol>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <h2>Technology</h2>
+            <p>
+                Sync Editor is built with ASP.NET Core backend and Blazor WebAssembly frontend.
+                It uses WebSocket connections for real-time communication between clients.
+            </p>
+        </div>
+    </div>
+    
+    <div class="text-center mt-4">
+        <a href="/" class="btn btn-primary">Try Sync Editor Now</a>
+    </div>
+</div>
+
+<style>
+    .about-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .card {
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .card-body {
+        padding: 20px;
+    }
+    
+    h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #3c4b64;
+    }
+    
+    h2 {
+        color: #3c4b64;
+        margin-bottom: 15px;
+        font-size: 1.5rem;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        border-radius: 4px;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background-color: #3c4b64;
+        color: white;
+    }
+    
+    .mt-4 {
+        margin-top: 2rem;
+    }
+</style> 
