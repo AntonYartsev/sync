@@ -22,16 +22,24 @@ namespace Sync.Frontend.Services
             _httpClient = httpClient;
             var backendUrl = Environment.GetEnvironmentVariable("BACKEND_URL") ?? "http://localhost:5001";
             _httpClient.BaseAddress = new Uri(backendUrl);
+            Console.WriteLine($"Using backend URL: {backendUrl}"); // Debug log
         }
 
         public async Task<EditorState?> GetEditorAsync(string id)
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<EditorState>($"api/editor/{id}", _jsonOptions);
+                var response = await _httpClient.GetAsync($"api/editor/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<EditorState>(_jsonOptions);
+                }
+                Console.WriteLine($"Failed to get editor: {response.StatusCode}"); // Debug log
+                return null;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error getting editor: {ex.Message}"); // Debug log
                 return null;
             }
         }
@@ -45,10 +53,12 @@ namespace Sync.Frontend.Services
                 {
                     return await response.Content.ReadFromJsonAsync<EditorState>(_jsonOptions);
                 }
+                Console.WriteLine($"Failed to create editor: {response.StatusCode}"); // Debug log
                 return null;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error creating editor: {ex.Message}"); // Debug log
                 return null;
             }
         }
@@ -62,10 +72,12 @@ namespace Sync.Frontend.Services
                 {
                     return await response.Content.ReadFromJsonAsync<EditorState>(_jsonOptions);
                 }
+                Console.WriteLine($"Failed to update editor: {response.StatusCode}"); // Debug log
                 return null;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error updating editor: {ex.Message}"); // Debug log
                 return null;
             }
         }

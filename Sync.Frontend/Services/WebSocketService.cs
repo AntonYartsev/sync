@@ -32,8 +32,9 @@ namespace Sync.Frontend.Services
             try
             {
                 var backendUrl = Environment.GetEnvironmentVariable("BACKEND_URL") ?? "http://localhost:5001";
-                var wsUrl = backendUrl.Replace("http", "ws");
+                var wsUrl = backendUrl.Replace("http", "ws").Replace("/api", "");
                 var uri = new Uri($"{wsUrl}/ws/{editorId}/{userId}");
+                Console.WriteLine($"Connecting to WebSocket: {uri}"); // Debug log
                 await _webSocket.ConnectAsync(uri, _cancellationTokenSource.Token);
                 _isConnected = true;
                 OnConnectionStatusChanged?.Invoke("Connected");
@@ -42,6 +43,7 @@ namespace Sync.Frontend.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"WebSocket connection failed: {ex.Message}"); // Debug log
                 OnConnectionStatusChanged?.Invoke($"Connection failed: {ex.Message}");
                 _isConnected = false;
             }
