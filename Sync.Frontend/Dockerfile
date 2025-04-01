@@ -1,6 +1,6 @@
 # Используем SDK для сборки проекта
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /app
 
 # Копируем файлы проекта и восстанавливаем зависимости
 COPY ["Sync.Frontend.csproj", "./"]
@@ -8,14 +8,17 @@ RUN dotnet restore
 
 # Копируем все остальные файлы и собираем проект
 COPY . .
+RUN dotnet build -c Release -o /app/build
+
+FROM build AS publish
 RUN dotnet publish -c Release -o /app/publish
 
 # Создаем runtime образ с Nginx
-FROM --platform=$TARGETPLATFORM nginx:alpine AS final
+FROM nginx:alpine AS final
 WORKDIR /usr/share/nginx/html
 
 # Копируем опубликованные файлы
-COPY --from=build /app/publish/wwwroot .
+COPY --from=publish /app/publish/wwwroot .
 
 # Создаем директорию для Bootstrap CSS
 RUN mkdir -p /usr/share/nginx/html/css/bootstrap
