@@ -31,8 +31,17 @@ namespace Sync.Frontend.Services
 
             try
             {
-                var backendUrl = Environment.GetEnvironmentVariable("BACKEND_URL") ?? "http://localhost:5001";
-                var wsUrl = backendUrl.Replace("http", "ws").Replace("/api", "");
+                var backendUrl = Environment.GetEnvironmentVariable("BACKEND_URL") ?? 
+                                 new HttpClient().BaseAddress?.ToString() ?? 
+                                 "http://localhost:5001";
+                
+                // Приводим URL к правильному формату для WebSocket
+                var wsUrl = backendUrl.Replace("https://", "wss://").Replace("http://", "ws://");
+                if (wsUrl.EndsWith("/api"))
+                {
+                    wsUrl = wsUrl.Substring(0, wsUrl.Length - 4);
+                }
+                
                 var uri = new Uri($"{wsUrl}/ws/{editorId}/{userId}");
                 Console.WriteLine($"Connecting to WebSocket: {uri}"); // Debug log
                 await _webSocket.ConnectAsync(uri, _cancellationTokenSource.Token);

@@ -17,6 +17,7 @@ services:
     image: ghcr.io/antonyartsev/sync/frontend:latest
     environment:
       - BACKEND_URL=https://sync.antonyartsev.com
+      - Logging__LogLevel__Default=Debug
     ports:
       - "5025:80"
     depends_on:

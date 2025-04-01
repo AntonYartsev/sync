@@ -6,7 +6,8 @@ using Sync.Frontend.Services;
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 // Get the backend URL from environment or configuration
-var backendUrl = builder.Configuration["BackendUrl"] ?? 
+var backendUrl = Environment.GetEnvironmentVariable("BACKEND_URL") ?? 
+                 builder.Configuration["BackendUrl"] ?? 
                  builder.HostEnvironment.BaseAddress.Replace("5025", "5001");
 
 builder.RootComponents.Add<App>("#app");
