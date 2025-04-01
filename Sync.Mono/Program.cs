@@ -8,6 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
+// Add health checks
+builder.Services.AddHealthChecks();
+
 // Register our services
 builder.Services.AddSingleton<IEditorService, EditorService>();
 builder.Services.AddSingleton<WebSocketService>();
@@ -25,6 +28,9 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
+// Map health check endpoint
+app.MapHealthChecks("/health");
 
 // Enable WebSockets
 app.UseWebSockets(new WebSocketOptions
@@ -54,6 +60,8 @@ app.MapGet("/ws/{editorId}/{userId}", async (HttpContext context, string editorI
 });
 
 app.MapBlazorHub();
+
+// Important: This should be last in the pipeline
 app.MapFallbackToPage("/_Host");
 
 app.Run();
