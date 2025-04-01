@@ -15,6 +15,7 @@ RUN dotnet publish -c Release -o /app/publish
 
 # Создаем runtime образ с Nginx
 FROM nginx:alpine AS final
+LABEL version="latest"
 WORKDIR /usr/share/nginx/html
 
 # Копируем опубликованные файлы

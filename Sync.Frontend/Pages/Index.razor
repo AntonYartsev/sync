@@ -1,4 +1,5 @@
 @page "/"
+@page "/{EditorId}"
 @using Sync.Frontend.Services
 @using Sync.Frontend.Models
 @using BlazorMonaco
@@ -16,7 +17,6 @@
     {
         <div class="loading-container">
             <div class="spinner"></div>
-            <p>Loading...</p>
         </div>
     }
     else if (_editorState == null)
@@ -25,14 +25,14 @@
             <div class="welcome-card">
                 <div class="welcome-body">
                     <div class="form-group">
-                        <input type="text" class="form-control" id="editorId" @bind="_editorIdInput" placeholder="Enter session ID or leave empty" />
+                        <input type="text" class="form-control" id="editorId" @bind="_editorIdInput" placeholder="Session ID" />
                     </div>
                     <div class="form-group">
-                        <input type="text" class="form-control" id="userId" @bind="_userIdInput" placeholder="Enter your name" />
+                        <input type="text" class="form-control" id="userId" @bind="_userIdInput" placeholder="Your name" />
                     </div>
                     <div class="language-dropdown">
                         <select id="language" class="form-control" @bind="_selectedLanguage">
-                        <option value="csharp">C#</option>
+                            <option value="csharp">C#</option>
                             <option value="javascript">JavaScript</option>
                             <option value="typescript">TypeScript</option>
                             <option value="html">HTML</option>
@@ -43,7 +43,7 @@
                             <option value="plaintext">Plain Text</option>
                         </select>
                     </div>
-                    <button class="btn btn-primary" @onclick="JoinOrCreateSession">Join Session</button>
+                    <button class="btn btn-primary" @onclick="JoinOrCreateSession">Join</button>
                 </div>
             </div>
         </div>
@@ -55,10 +55,9 @@
                 <div class="editor-header">
                     <div class="header-left">
                         <div class="session-info">
-                            <span class="session-id">Session: @_editorState.Id</span>
+                            <span class="session-id">@_editorState.Id</span>
                             <div class="connection-info">
                                 <span class="connection-indicator @(_connectionStatus == "Connected" ? "connected" : "disconnected")"></span>
-                                <span>@_connectionStatus</span>
                             </div>
                         </div>
                     </div>
@@ -79,7 +78,7 @@
                         </div>
                         
                         <div class="users-info">
-                            <span class="users-count">Users: @_editorState.ConnectedUsers.Count</span>
+                            <span class="users-count">@_editorState.ConnectedUsers.Count</span>
                             <div class="users-dropdown">
                                 <div class="dropdown-content">
                                     @foreach (var user in _editorState.ConnectedUsers)
@@ -511,6 +510,9 @@
 </style>
 
 @code {
+    [Parameter]
+    public string? EditorId { get; set; }
+
     private EditorState? _editorState;
     private string _content = string.Empty;
     private string _editorIdInput = string.Empty;
@@ -529,6 +531,15 @@
     {
         WebSocketService.OnContentUpdated += OnWebSocketContentUpdated;
         WebSocketService.OnConnectionStatusChanged += OnConnectionStatusChanged;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrEmpty(EditorId))
+        {
+            _editorIdInput = EditorId;
+            await JoinOrCreateSession();
+        }
     }
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
