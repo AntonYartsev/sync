@@ -26,6 +26,22 @@ services:
     networks:
       - sync-network
 
+  caddy:
+    image: caddy:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - sync-network
+
 networks:
   sync-network:
     driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
