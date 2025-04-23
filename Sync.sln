@@ -1,0 +1,21 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sync.Mono", "Sync.Mono\Sync.Mono.csproj", "{BD799BC3-2D95-48B1-9260-A0E1CB8F94DB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BD799BC3-2D95-48B1-9260-A0E1CB8F94DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD799BC3-2D95-48B1-9260-A0E1CB8F94DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD799BC3-2D95-48B1-9260-A0E1CB8F94DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD799BC3-2D95-48B1-9260-A0E1CB8F94DB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

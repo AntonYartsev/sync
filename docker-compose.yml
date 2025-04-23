@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  sync:
+    image: sync:latest
+    build:
+      context: .
+      dockerfile: Sync.Mono/Dockerfile
+    container_name: sync
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+    ports:
+      - "5000:80"
+    restart: unless-stopped 
