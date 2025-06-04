@@ -36,6 +36,10 @@
             <div class="editor-wrapper">
                 <div class="editor-header">
                     <div class="header-left">
+                        <div class="cut-copy-buttons">
+                            <button class="btn-dark btn-exit" @onclick="CutContent">CUT</button>
+                            <button class="btn-dark btn-exit" @onclick="CopyContent">COPY</button>
+                        </div>
                         <div class="session-info">
                             <div class="connection-info">
                                 <span class="connection-indicator @(_connectionStatus == "Connected" ? "connected" : "disconnected")"></span>
@@ -261,6 +265,22 @@
         catch (Exception ex)
         {
             Console.WriteLine($"Error sending language update: {ex.Message}");
+        }
+    }
+
+    private async Task CopyContent()
+    {
+        await JSRuntime.InvokeVoidAsync("clipboardInterop.copyText", _content);
+    }
+
+    private async Task CutContent()
+    {
+        await JSRuntime.InvokeVoidAsync("clipboardInterop.copyText", _content);
+        _content = string.Empty;
+
+        if (_editorState != null)
+        {
+            await EditorService.UpdateEditorStateAsync(_editorState.Id, _content);
         }
     }
 
@@ -510,8 +530,13 @@
         background-color: #dc3545;
     }
 
-    .language-selector, .users-info {
+    .language-selector, .users-info, .cut-copy-buttons {
         margin-right: 20px;
+    }
+
+    .cut-copy-buttons {
+        display: flex;
+        gap: 10px;
     }
 
     .dark-select {
