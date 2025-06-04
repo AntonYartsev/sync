@@ -236,11 +236,14 @@
 
         try
         {
+            _isProcessingChange = true;
             await EditorService.UpdateEditorStateAsync(_editorState.Id, _content);
+            _isProcessingChange = false;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error sending content update: {ex.Message}");
+            _isProcessingChange = false;
         }
     }
 
