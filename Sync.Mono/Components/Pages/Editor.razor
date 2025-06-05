@@ -37,8 +37,8 @@
                 <div class="editor-header">
                     <div class="header-left">
                         <div class="cut-copy-buttons">
-                            <button class="btn-dark btn-exit" @onclick="CutContent">CUT</button>
-                            <button class="btn-dark btn-exit" @onclick="CopyContent">COPY</button>
+                            <button class="btn-dark btn-blue" @onclick="CutContent">CUT</button>
+                            <button class="btn-dark btn-blue" @onclick="CopyContent">COPY</button>
                         </div>
                         <div class="session-info">
                             <div class="connection-info">
@@ -565,6 +565,15 @@
 
     .btn-exit {
         background-color: #dc3545;
+    }
+
+    .btn-blue {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
     }
 
     .editor-content {
